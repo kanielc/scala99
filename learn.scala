@@ -169,12 +169,12 @@ object LearnTest extends App {
   def lsort[T](list: List[List[T]]) = list.sortBy(_.length)
 
   def lsortFreq[T](list: List[List[T]]) = {
-    def lp[T](list: List[List[T]], m: scala.collection.mutable.Map[Int, Int]): scala.collection.mutable.Map[Int, Int] = {
-      list.foreach(e => m(e.length) += 1)
-      m
+    def lp[T](list: List[List[T]], m: Map[Int, Int]): Map[Int, Int] = list match {    
+      case Nil => m
+      case h::tail => lp(tail, m + ((h.length, 1 + m(h.length))))       
     }
 
-    val valMap = lp(list, scala.collection.mutable.Map[Int, Int]().withDefaultValue(0))
+    val valMap = lp(list, Map[Int, Int]().withDefaultValue(0))    
     list.sortBy(e => valMap(e.length))
   }
   
