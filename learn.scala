@@ -1,14 +1,39 @@
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
 
+implicit class RichInt(x: Int) { 
+  import LearnTest._
+  
+  def isPrime = (2 to x / 2).forall(x % _ != 0)
+  
+  def isCoprimeTo(y: Int) = gcd(x, y) == 1
+  
+  def totient = (1 to x).filter(_.isCoprimeTo(x)).length
+  
+  def primeFactors = {
+    def pFac(div: Int, num: Int):List[Int] = {
+      if (num < 2) // shouldn't happen
+	Nil
+      else if (num % div == 0 && div.isPrime)
+	div :: pFac(div, num / div) 
+      else if (div > num / 2)
+	List(num)  // must be a prime
+      else
+	pFac(div + 1, num)
+    }
+    
+    pFac(2, x)
+  }
+}
+     
 object LearnTest extends App {
   def last[T](list: List[T]) = {
     list.last
   }
 
-  def penultimate[T](list: List[T]) = {
-    list(math.max(0, list.length - 2))
-  }
+  // Note, this function is just plain undefined if list size is less than 2
+  // Proper definition would be to use an Option
+  def penultimate[T](list: List[T]): T = list.reverse.tail.head
 
   def nth[T](x: Int, list: List[T]) = list(x)
 
@@ -41,41 +66,25 @@ object LearnTest extends App {
   }
 
   def compress[T](list: List[T]) = {
-    val res: ArrayBuffer[T] = new ArrayBuffer[T]()
-
-    for (x <- list) {
-      if (res.isEmpty)
-        res.append(x)
-      else if (x != res.last)
-        res.append(x)
+    def cprime(last: Any, list: List[T]): List[T] = list match {      
+      case Nil => Nil
+      case h::tail => if (last == h) cprime(last, tail) else h :: cprime(h, tail)
     }
-
-    res.toList
+    
+    cprime(None, list)
   }
 
   def pack[T](list: List[T]) = {
-    val res: ArrayBuffer[List[T]] = new ArrayBuffer[List[T]]()
-    var currList: ArrayBuffer[T] = new ArrayBuffer[T]()
-
-    for (x <- list) {
-      if (currList.isEmpty)
-        currList.append(x)
-      else if (x == currList.last)
-        currList.append(x)
-      else {
-        res.append(currList.toList)
-        currList.clear()
-        currList.append(x)
-      }
+    def pprime(last: Any, currList: List[T], list: List[T]): List[List[T]] = list match {
+      case Nil => List(currList)
+      case h::tail if (currList.length == 0) => pprime(h, List(h), tail)
+      case h::tail => if (h == last) pprime(last, h :: currList, tail) else currList :: pprime(h, List(h), tail)      
     }
-
-    if (!currList.isEmpty)
-      res.append(currList.toList)
-
-    res.toList
+    
+    pprime(None, Nil, list)
   }
 
-  def encode[T](list: List[T]) = {
+  def encode[T](list: List[T]):List[(Int, T)] = {
     (pack(list)).map((l: List[T]) => (l.length, l(0)))
   }
 
@@ -168,6 +177,16 @@ object LearnTest extends App {
     val valMap = lp(list, scala.collection.mutable.Map[Int, Int]().withDefaultValue(0))
     list.sortBy(e => valMap(e.length))
   }
+  
+  def gcd(x: Int, y: Int):Int = {
+    if (x == y) 
+      x
+    else if (x > y)
+      gcd(y, x)
+    else
+      gcd(x, y - x)   
+  }
+      
 
   var res: Any = last(List(1, 1, 2, 3, 5, 8))
   printResult(1, res, 8)
@@ -237,4 +256,21 @@ object LearnTest extends App {
 
   res = lsortFreq(List(List('a, 'b, 'c), List('d, 'e), List('f, 'g, 'h), List('d, 'e), List('i, 'j, 'k, 'l), List('m, 'n), List('o)))
   printResult(28, res, List(List('i, 'j, 'k, 'l), List('o), List('a, 'b, 'c), List('f, 'g, 'h), List('d, 'e), List('d, 'e), List('m, 'n)))
+  
+  res = 7.isPrime
+  printResult(31, res, true)
+  
+  res = gcd(36, 63)
+  printResult(32, res, 9)
+  
+  res = 35.isCoprimeTo(64)
+  printResult(33, res, true)
+  
+  res = 10.totient
+  printResult(34, res, 4)
+  
+  res = 315.primeFactors
+  printResult(35, res, List(3, 3, 5, 7))
 }
+
+LearnTest.main(null)
