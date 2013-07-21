@@ -150,20 +150,18 @@ object LearnTest extends App {
     }
 
   def group3[T](list: List[T]): List[List[List[T]]] = group((2, 3, 4), list)
-
-  def group[T](sizes: (Int, Int, Int), list: List[T]): List[List[List[T]]] = {
-    val result = new ListBuffer[List[List[T]]]
-
-    val com2 = combinations(sizes._1, list).foreach {
-      i =>
-        val com3 = combinations(sizes._2, list.filterNot(i.contains(_)))
-        com3.foreach {
-          item =>
-            val filList = list.filterNot(elem => (item.contains(elem) || i.contains(elem)))
-            result += List(i, item, filList)
-        }
-    }
-    result.toList
+  
+  // I like this definition better as a Tuple, easy enough to change to a List
+  def group[T](sizes: (Int, Int, Int), list: List[T]) = {        
+    def collector(parent: List[T], mylist: List[List[T]]): List[List[List[T]]] = mylist match {
+	case Nil => Nil
+	case h::tail => {
+	  val filList = list.filterNot(elem => (h.contains(elem) || parent.contains(elem)))
+	  List(parent, h, filList) :: collector(parent, tail)
+	}
+      }          
+    
+    combinations(sizes._1, list).flatMap(i => collector(i, combinations(sizes._2, list.filterNot(i.contains(_)))))
   }
 
   def lsort[T](list: List[List[T]]) = list.sortBy(_.length)
@@ -250,6 +248,10 @@ object LearnTest extends App {
 
   res = removeAt(1, List('a, 'b, 'c, 'd))
   printResult(19, res, (List('a, 'c, 'd), 'b))
+  
+  // Test this one by checking for an element
+  res = group(List(2, 2, 5), List("Aldo", "Beat", "Carla", "David", "Evi", "Flip", "Gary", "Hugo", "Ida")).contains(List(List("Aldo", "Beat"), List("Carla", "David"), List("Evi", "Flip", "Gary", "Hugo", "Ida")))
+  printResult(27, res, true) // I don't have an easy way to test this
 
   res = lsort(List(List('a, 'b, 'c), List('d, 'e), List('f, 'g, 'h), List('d, 'e), List('i, 'j, 'k, 'l), List('m, 'n), List('o)))
   printResult(28, res, List(List('o), List('d, 'e), List('d, 'e), List('m, 'n), List('a, 'b, 'c), List('f, 'g, 'h), List('i, 'j, 'k, 'l)))
