@@ -1,14 +1,20 @@
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.ListBuffer
-
-implicit class RichInt(x: Int) { 
+implicit class RichInt(val x: Int) { 
   import LearnTest._
   
-  def isPrime = (2 to x / 2).forall(x % _ != 0)
+  def isPrime = x > 1 && (2 to Math.sqrt(x).toInt).forall(x % _ != 0)
   
   def isCoprimeTo(y: Int) = gcd(x, y) == 1
   
   def totient = (1 to x).filter(_.isCoprimeTo(x)).length
+  
+  def totientImproved = {
+    def tPrime(list: List[(Int,Int)]): Int = list match {
+      case Nil => 1
+      case (p, m)::tail => (p - 1) * Math.pow(p, m - 1).toInt * tPrime(tail)
+    }
+    
+    tPrime(primeFactorsMultiplicity)
+  }
   
   def primeFactors = {
     def pFac(div: Int, num: Int):List[Int] = {
@@ -23,6 +29,17 @@ implicit class RichInt(x: Int) {
     }
     
     pFac(2, x)
+  }
+  
+  def primeFactorsMultiplicity = encode(primeFactors).map(e => (e._2, e._1))
+  
+  def goldbach = {
+    def solution(list: List[Int]): (Int,Int) = list match {
+      case Nil => (0, 0)  // rather undefined here I'd say
+      case h::tail => if (tail.contains(x - h)) (h, x - h) else solution(tail)
+    }
+    
+    solution(listPrimesinRange(2 to x))
   }
 }
      
@@ -184,8 +201,17 @@ object LearnTest extends App {
     else
       gcd(x, y - x)   
   }
+  
+  def listPrimesinRange(rng: Range) = rng.filter(_.isPrime).toList
       
-
+  def printGoldbachList(rng: Range) {
+    printGoldbachListLimited(rng, 2) // simply the limited version, but with a minimum of 2
+  }
+  
+  def printGoldbachListLimited(rng: Range, minimum: Int) {
+    rng.filter(_ % 2 == 0).map(_.goldbach).filter(item => item._1 >= minimum && item._2 >= minimum).foreach(item => println(s"${item._1} + ${item._2}"))
+  }
+  
   var res: Any = last(List(1, 1, 2, 3, 5, 8))
   printResult(1, res, 8)
 
@@ -250,7 +276,7 @@ object LearnTest extends App {
   printResult(19, res, (List('a, 'c, 'd), 'b))
   
   // Test this one by checking for an element
-  res = group(List(2, 2, 5), List("Aldo", "Beat", "Carla", "David", "Evi", "Flip", "Gary", "Hugo", "Ida")).contains(List(List("Aldo", "Beat"), List("Carla", "David"), List("Evi", "Flip", "Gary", "Hugo", "Ida")))
+  res = group((2, 2, 5), List("Aldo", "Beat", "Carla", "David", "Evi", "Flip", "Gary", "Hugo", "Ida")).contains(List(List("Aldo", "Beat"), List("Carla", "David"), List("Evi", "Flip", "Gary", "Hugo", "Ida")))
   printResult(27, res, true) // I don't have an easy way to test this
 
   res = lsort(List(List('a, 'b, 'c), List('d, 'e), List('f, 'g, 'h), List('d, 'e), List('i, 'j, 'k, 'l), List('m, 'n), List('o)))
@@ -273,6 +299,24 @@ object LearnTest extends App {
   
   res = 315.primeFactors
   printResult(35, res, List(3, 3, 5, 7))
+  
+  res = 315.primeFactorsMultiplicity
+  printResult(36, res, List((3,2), (5,1), (7,1)))
+  
+  res = 10.totientImproved
+  printResult(37, res, 4)
+  
+  res = 10090.totientImproved
+  printResult(38, res, 10090.totient)
+  
+  res = listPrimesinRange(7 to 31)
+  printResult(39, res, List(7, 11, 13, 17, 19, 23, 29, 31))
+  
+  res = 28.goldbach
+  printResult(40, res, (5,23))
+  
+  printGoldbachList(9 to 20)
+  printGoldbachListLimited(1 to 2000, 50)
 }
 
 LearnTest.main(null)
