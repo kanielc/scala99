@@ -212,6 +212,15 @@ object LearnTest extends App {
     rng.filter(_ % 2 == 0).map(_.goldbach).filter(item => item._1 >= minimum && item._2 >= minimum).foreach(item => println(s"${item._1} + ${item._2}"))
   }
   
+  def and(a:Boolean, b: Boolean) = a && b
+  def nand(a:Boolean, b: Boolean) = !(a && b)
+  def or(a:Boolean, b: Boolean) = a || b
+  def nor(a:Boolean, b: Boolean) = !(a || b)
+  def xor(a:Boolean, b: Boolean) = or(a,b) && nand(a,b)
+  def xor(a:Boolean, b: Boolean) = or(a,b) && a != b
+  def equ(a:Boolean, b: Boolean) = a == b
+  def imp(a:Boolean, b: Boolean) = !(a && !b)
+
   var res: Any = last(List(1, 1, 2, 3, 5, 8))
   printResult(1, res, 8)
 
